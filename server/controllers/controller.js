@@ -1,5 +1,6 @@
 const User = require("../Models/UserModel");
 const Post = require("../Models/PostModel");
+const Comment = require("../Models/CommentModel");
 
 exports.signup = async (req, res) => {
   const { username } = req.body;
@@ -31,15 +32,34 @@ exports.signin = async (req, res) => {
   }
 };
 
-exports.createPost = async (req, res) => {
-  const { poster, content } = req.body;
-  try {
-    const post = await Post.create({
-      poster,
-      content,
-    });
-    res.status(200).json(post);
-  } catch (err) {
-    res.status(500).json(err);
-  }
+exports.createPost = (req, res) => {
+  const post = new Post(req.body);
+
+  post.save((err, post) => {
+    if (err) return res.json({ success: false, err });
+
+    Post.find({ _id: post._id })
+      .populate("poster")
+      .exec((err, result) => {
+        if (err) return res.status(500).json({ success: false, err });
+        return res.status(200).json({ success: true, result });
+      });
+  });
+};
+
+exports.createComment = async (req, res) => {
+  const comment = new Comment(req.body);
+
+  comment.save((err, comment) => {
+    if (err) return res.json({ success: false, err });
+
+    Comment.find({ _id: comment._id })
+      .populate("commenterId")
+      .populate("postId")
+      .populate("responseTo")
+      .exec((err, result) => {
+        if (err) return res.status(500).json({ success: false, err });
+        return res.status(200).json({ success: true, result });
+      });
+  });
 };

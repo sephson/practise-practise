@@ -1,10 +1,9 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-
 const commentSchema = new mongoose.Schema(
   {
-    writer: {
+    commenterId: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
