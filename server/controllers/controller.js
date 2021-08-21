@@ -93,13 +93,30 @@ exports.likePost = async (req, res) => {
     const findPost = await Post.findOne({ _id: req.params.postId }).populate(
       "likes"
     );
-    const check = await Post.find({ "likes._id": "req.body.like" });
-    if (check) {
+    const check = findPost.likes.map((item) => item._id);
+    if (!check.includes(req.body.like)) {
       await findPost.updateOne({ $push: { likes: req.body.like } });
-      res.status(200).json({ message: "Post Liked", findPost });
+      res.status(200).json({ message: "Post Liked" });
     } else {
-      res.status(200).json({ message: "Post Liked", findPost });
+      await findPost.updateOne({ $pull: { likes: req.body.like } });
+      res.status(200).json({ message: "Post UnLiked" });
     }
+    // res.json(check);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+};
+
+exports.getComment = async (req, res) => {
+  try {
+    const com = await Comment.find({ postId: req.params.postId })
+      .populate("commenterId")
+      .populate("postId")
+      .populate("responseTo");
+
+    com
+      ? res.status(200).json({ success: true, com })
+      : res.status(404).json("not found");
   } catch (err) {
     res.status(500).json(err);
   }
