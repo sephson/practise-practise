@@ -47,7 +47,7 @@ exports.createPost = (req, res) => {
   });
 };
 
-exports.createComment = async (req, res) => {
+exports.createComment = (req, res) => {
   const comment = new Comment(req.body);
 
   comment.save((err, comment) => {
@@ -62,4 +62,45 @@ exports.createComment = async (req, res) => {
         return res.status(200).json({ success: true, result });
       });
   });
+};
+
+exports.singlePost = async (req, res) => {
+  try {
+    const p = await Post.findOne({ _id: req.params.postId })
+      .populate("poster")
+      .populate("likes");
+
+    p
+      ? res.status(200).json({ success: true, p })
+      : res.status(404).json("not found");
+  } catch (err) {
+    res.status(500).json(err);
+  }
+};
+
+//method two
+// exports.singlePost = (req, res) => {
+//   Post.find({ _id: req.params.postId })
+//     .populate("poster")
+//     .exec((err, result) => {
+//       if (err) return res.status(500).json({ success: false, err });
+//       return res.status(200).json({ success: true, result });
+//     });
+// };
+
+exports.likePost = async (req, res) => {
+  try {
+    const findPost = await Post.findOne({ _id: req.params.postId }).populate(
+      "likes"
+    );
+    const check = await Post.find({ "likes._id": "req.body.like" });
+    if (check) {
+      await findPost.updateOne({ $push: { likes: req.body.like } });
+      res.status(200).json({ message: "Post Liked", findPost });
+    } else {
+      res.status(200).json({ message: "Post Liked", findPost });
+    }
+  } catch (err) {
+    res.status(500).json(err);
+  }
 };
